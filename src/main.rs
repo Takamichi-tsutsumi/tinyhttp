@@ -3,7 +3,7 @@ extern crate http;
 
 use tokio::io;
 use tokio::prelude::*;
-use tokio::net::TcpListener;
+use tokio::net::{TcpStream, TcpListener};
 use http::{Response, StatusCode};
 
 fn main() {
@@ -13,26 +13,31 @@ fn main() {
     let server = listener
         .incoming()
         .for_each(|socket| {
-            let res = Response::builder()
-                .status(StatusCode::OK)
-                .body(())
-                .unwrap();
-            let connection =
-                io::write_all(socket, encode(res)).then(|response| {
-                                                            println!("wrote message; success={:?}",
-                                                                     response.is_ok());
-                                                            Ok(())
-                                                        });
-
-            tokio::spawn(connection);
-
-            Ok(())
-        })
+                      process(socket);
+                      Ok(())
+                  })
         .map_err(|err| {
                      println!("IO error: {}", err);
                  });
 
     tokio::run(server);
+}
+
+
+fn process(socket: TcpStream) {
+    let (tx, rx) = socket.split();
+    let res = Response::builder()
+        .status(StatusCode::OK)
+        .body(())
+        .unwrap();
+
+    let connection = io::write_all(encode(res)).then(|response| {
+                                                         println!("wrote message; success={:?}",
+                                                                  response.is_ok());
+                                                         Ok(())
+                                                     });
+
+    tokio::spawn(connection);
 }
 
 fn encode(res: Response<()>) -> Vec<u8> {
