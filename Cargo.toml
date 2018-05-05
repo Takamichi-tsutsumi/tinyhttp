@@ -1,0 +1,6 @@
+[package]
+name = "tinyhttp"
+version = "0.1.0"
+authors = ["Takamichi-tsutsumi <1220t.takamichi@gmail.com>"]
+
+[dependencies]
